@@ -1,0 +1,113 @@
+.service-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.service-header h1 {
+  margin: 0;
+  color: #333;
+}
+
+.service-content {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.service-form-container {
+  padding: 20px;
+}
+
+.service-form-section {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+}
+
+.service-form-section:last-child {
+  border-bottom: none;
+}
+
+.service-form-group {
+  margin-bottom: 15px;
+}
+
+.service-duration-inputs {
+  display: flex;
+  gap: 15px;
+}
+
+.service-duration-inputs .form-group {
+  flex: 1;
+}
+
+.service-price-input {
+  position: relative;
+}
+
+.service-price-input::before {
+  content: "₺";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+}
+
+.service-price-input input {
+  padding-left: 25px;
+}
+
+.service-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.service-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.service-table th,
+.service-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.service-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.service-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.service-badge {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.service-badge-active {
+  background-color: #e3fcef;
+  color: #0d6832;
+}
+
+.service-badge-passive {
+  background-color: #fff3cd;
+  color: #856404;
+} 

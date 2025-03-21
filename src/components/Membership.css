@@ -1,0 +1,118 @@
+/* Membership sayfaları için stil tanımları */
+
+.membership-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 60px);
+}
+
+.clinic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.clinic-content {
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.clinic-table th, .clinic-table td {
+  padding: 12px 15px;
+  vertical-align: middle;
+}
+
+.clinic-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.clinic-table tbody tr:hover {
+  background-color: rgba(0,123,255,0.05);
+}
+
+/* Uyarı mesajları için stil tanımları */
+.white-space-pre-line {
+  white-space: pre-line;
+}
+
+/* Form alanları için stil tanımları */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* Filtreleme kutusu için stil tanımları */
+.filter-container {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Detay ve düzenleme sayfaları için stil tanımları */
+.detail-value {
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+.detail-label {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Hata mesajları için stil tanımları */
+.alert {
+  border-radius: 5px;
+  margin-bottom: 1rem;
+}
+
+/* Responsive düzenlemeler */
+@media (max-width: 768px) {
+  .clinic-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .clinic-header h1 {
+    margin-bottom: 15px;
+  }
+  
+  .clinic-content {
+    padding: 15px;
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.status-badge.inactive {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.search-box {
+  max-width: 400px;
+  margin-bottom: 20px;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+} 

@@ -1,0 +1,24 @@
+{
+  "name": "levaic-health-system",
+  "version": "1.0.0",
+  "description": "Levaic Health Management System",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install",
+    "start": "cd backend && node index.js",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
+    "vercel-build": "cd frontend && npm install && npm run build"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "keywords": [
+    "health",
+    "management",
+    "system"
+  ],
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "author": "Levaic",
+  "license": "ISC"
+}
