@@ -1,14 +1,8 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/backend/index.js" },
-    { "source": "/(.*)", "destination": "/frontend/build/index.html" }
-  ],
   "buildCommand": "npm run build",
-  "outputDirectory": "frontend/build",
-  "env": {
-    "NODE_ENV": "production",
-    "MONGO_URI": "mongodb+srv://levaicadmin:levaicadmin34.@cluster0.xfgxw.mongodb.net/saglik_yonetim?retryWrites=true&w=majority&appName=Cluster0",
-    "JWT_SECRET": "levaic_jwt_secure_secret_key_2023"
-  }
+  "outputDirectory": "build",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 } 

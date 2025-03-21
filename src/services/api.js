@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Ana API yapılandırması - her zaman doğru URL'yi kullan
 const isProduction = process.env.NODE_ENV === 'production';
-// Production ortamında KESINLIKLE relative path kullan
-const API_URL = isProduction ? '/api' : 'http://localhost:5005/api';
+// Production ortamında backend'in tam URL'sini kullan
+const API_URL = isProduction ? 'https://levaic-backend.vercel.app' : 'http://localhost:5005';
 
 // Zorunlu loglar (debugging için)
 console.log('---------------------------------------------');
