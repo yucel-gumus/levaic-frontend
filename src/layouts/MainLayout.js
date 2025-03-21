@@ -47,6 +47,7 @@ const MainLayout = ({ children }) => {
     if (path.includes('/klinik')) return 'clinics';
     if (path.includes('/uyelik')) return 'membership';
     if (path.includes('/danisman')) return 'consultant';
+    if (path.includes('/hizmet')) return 'services';
     return '';
   };
 
@@ -108,6 +109,12 @@ const MainLayout = ({ children }) => {
                   {!sidebarCollapsed && <span className="nav-text">Danışmanlar</span>}
                 </button>
               </li>
+              <li className={`nav-item ${getActiveTab() === 'services' ? 'active' : ''}`}>
+                <button onClick={() => navigate('/hizmet')} className="nav-link">
+                  <span className="nav-icon"><ChartIcon /></span>
+                  {!sidebarCollapsed && <span className="nav-text">Hizmetler</span>}
+                </button>
+              </li>
             </ul>
           </nav>
         </div>
@@ -132,6 +139,7 @@ const MainLayout = ({ children }) => {
                 {getActiveTab() === 'clinics' && 'Klinikler'}
                 {getActiveTab() === 'membership' && 'Üyelik'}
                 {getActiveTab() === 'consultant' && 'Danışmanlar'}
+                {getActiveTab() === 'services' && 'Hizmetler'}
               </h1>
             </div>
             
