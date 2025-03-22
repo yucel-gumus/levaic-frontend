@@ -373,4 +373,105 @@ export const FilterButton = styled.button`
       margin-right: 8px;
     }
   }
+`;
+
+// Form Components
+export const FormGroup = styled.div`
+  margin-bottom: 20px;
+  width: 100%;
+`;
+
+export const FormLabel = styled.label`
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  display: block;
+`;
+
+export const FormInput = styled.input`
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px 15px;
+  border: 1px solid ${props => props.isInvalid ? '#E53E3E' : '#e2e8f0'};
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #f8f9fa;
+
+  &:focus {
+    border-color: ${props => props.isInvalid ? '#E53E3E' : '#2563eb'};
+    box-shadow: 0 0 0 3px ${props => props.isInvalid ? 'rgba(229, 62, 62, 0.15)' : 'rgba(37, 99, 235, 0.15)'};
+    background-color: #fff;
+    outline: none;
+  }
+
+  &::placeholder {
+    color: #a0aec0;
+    font-style: italic;
+  }
+`;
+
+export const FormTextarea = styled.textarea`
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px 15px;
+  border: 1px solid ${props => props.isInvalid ? '#E53E3E' : '#e2e8f0'};
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #f8f9fa;
+  min-height: 100px;
+  resize: vertical;
+
+  &:focus {
+    border-color: ${props => props.isInvalid ? '#E53E3E' : '#2563eb'};
+    box-shadow: 0 0 0 3px ${props => props.isInvalid ? 'rgba(229, 62, 62, 0.15)' : 'rgba(37, 99, 235, 0.15)'};
+    background-color: #fff;
+    outline: none;
+  }
+
+  &::placeholder {
+    color: #a0aec0;
+    font-style: italic;
+  }
+`;
+
+export const FormSelect = styled.select`
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px 15px;
+  border: 1px solid ${props => props.isInvalid ? '#E53E3E' : '#e2e8f0'};
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #f8f9fa;
+  appearance: auto;
+
+  &:focus {
+    border-color: ${props => props.isInvalid ? '#E53E3E' : '#2563eb'};
+    box-shadow: 0 0 0 3px ${props => props.isInvalid ? 'rgba(229, 62, 62, 0.15)' : 'rgba(37, 99, 235, 0.15)'};
+    background-color: #fff;
+    outline: none;
+  }
+`;
+
+export const FormRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px 20px -10px;
+  
+  ${FormGroup} {
+    padding: 0 10px;
+    flex: 1;
+    
+    @media (max-width: 768px) {
+      flex: 100%;
+      margin-bottom: 15px;
+    }
+  }
+`;
+
+export const ErrorText = styled.span`
+  color: #E53E3E;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
 `; 

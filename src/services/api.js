@@ -5,6 +5,12 @@ import { toast } from 'react-hot-toast';
 const isProduction = process.env.NODE_ENV === 'production';
 const API_URL = isProduction ? 'https://levaic-backend.vercel.app' : 'http://localhost:5005';
 
+console.log('API yapılandırması:', {
+  isProduction,
+  apiUrl: API_URL,
+  nodeEnv: process.env.NODE_ENV
+});
+
 // Axios instance oluştur
 const api = axios.create({
   baseURL: API_URL,

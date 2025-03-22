@@ -31,6 +31,10 @@ import ServiceEdit from './pages/Service/ServiceEdit';
 import AppointmentList from './pages/Appointment/AppointmentList';
 import AppointmentCreate from './pages/Appointment/AppointmentCreate';
 import AppointmentEdit from './pages/Appointment/AppointmentEdit';
+import BlogList from './pages/Blog/BlogList';
+import BlogCreate from './pages/Blog/BlogCreate';
+import BlogEdit from './pages/Blog/BlogEdit';
+import BlogDetail from './pages/Blog/BlogDetail';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -194,6 +198,39 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <AppointmentEdit />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* Blog Routes */}
+          <Route path="/blog" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <BlogList />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/blog/ekle" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <BlogCreate />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/blog/duzenle/:id" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <BlogEdit />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/blog/:id" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <BlogDetail />
               </MainLayout>
             </ProtectedRoute>
           } />

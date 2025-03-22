@@ -150,9 +150,19 @@ const ClinicList = () => {
       sortable: true,
       cell: row => (
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ marginRight: '10px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f9ff', borderRadius: '50%', color: '#2563eb' }}>
-            <ClinicIcon />
-          </div>
+          {row.profil_resmi_url ? (
+            <div style={{ marginRight: '10px', width: '32px', height: '32px', overflow: 'hidden', borderRadius: '50%' }}>
+              <img 
+                src={row.profil_resmi_url} 
+                alt={row.ad} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+            </div>
+          ) : (
+            <div style={{ marginRight: '10px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f9ff', borderRadius: '50%', color: '#2563eb' }}>
+              <ClinicIcon />
+            </div>
+          )}
           <div>
             <div style={{ fontWeight: 'bold' }}>{row.ad}</div>
             <div style={{ fontSize: '12px', color: '#6b7280' }}>{row.adres?.substring(0, 30)}...</div>

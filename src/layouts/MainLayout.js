@@ -8,7 +8,8 @@ import {
   BellIcon, 
   SearchIcon,
   LogoutIcon,
-  SettingsIcon
+  SettingsIcon,
+  BlogIcon
 } from '../components/icons';
 import authService from '../services/authService';
 import { toast } from 'react-hot-toast';
@@ -49,6 +50,7 @@ const MainLayout = ({ children }) => {
     if (path.includes('/danisman')) return 'consultant';
     if (path.includes('/hizmet')) return 'services';
     if (path.includes('/randevular')) return 'appointments';
+    if (path.includes('/blog')) return 'blogs';
     return '';
   };
 
@@ -122,6 +124,12 @@ const MainLayout = ({ children }) => {
                   {!sidebarCollapsed && <span className="nav-text">Randevular</span>}
                 </button>
               </li>
+              <li className={`nav-item ${getActiveTab() === 'blogs' ? 'active' : ''}`}>
+                <button onClick={() => navigate('/blog')} className="nav-link">
+                  <span className="nav-icon"><BlogIcon /></span>
+                  {!sidebarCollapsed && <span className="nav-text">Bloglar</span>}
+                </button>
+              </li>
             </ul>
           </nav>
         </div>
@@ -148,6 +156,7 @@ const MainLayout = ({ children }) => {
                 {getActiveTab() === 'consultant' && 'Danışmanlar'}
                 {getActiveTab() === 'services' && 'Hizmetler'}
                 {getActiveTab() === 'appointments' && 'Randevular'}
+                {getActiveTab() === 'blogs' && 'Bloglar'}
               </h1>
             </div>
             

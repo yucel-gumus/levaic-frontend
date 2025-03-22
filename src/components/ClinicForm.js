@@ -165,10 +165,19 @@ const ClinicForm = ({ clinic, onChange, onSubmit, submitButtonText = 'Kaydet', o
               name="profil_resmi"
               onChange={(e) => handleFileChange(e, 'profil_resmi')}
             />
-            {clinic.profil_resmi && (
+            {clinic.profil_resmi && clinic.profil_resmi.includes('base64') && (
               <div className="mt-2">
                 <img 
                   src={clinic.profil_resmi} 
+                  alt="Klinik Profil Resmi" 
+                  style={{ width: '100px', height: '100px', objectFit: 'cover' }} 
+                />
+              </div>
+            )}
+            {clinic.profil_resmi_url && (
+              <div className="mt-2">
+                <img 
+                  src={clinic.profil_resmi_url} 
                   alt="Klinik Profil Resmi" 
                   style={{ width: '100px', height: '100px', objectFit: 'cover' }} 
                 />
@@ -277,10 +286,19 @@ const ClinicForm = ({ clinic, onChange, onSubmit, submitButtonText = 'Kaydet', o
               name="yonetici_profil_resmi"
               onChange={(e) => handleFileChange(e, 'yonetici_profil_resmi')}
             />
-            {clinic.yonetici_profil_resmi && (
+            {clinic.yonetici_profil_resmi && clinic.yonetici_profil_resmi.includes('base64') && (
               <div className="mt-2">
                 <img 
                   src={clinic.yonetici_profil_resmi} 
+                  alt="Yönetici Profil Resmi" 
+                  style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50%' }} 
+                />
+              </div>
+            )}
+            {clinic.yonetici_profil_resmi_url && (
+              <div className="mt-2">
+                <img 
+                  src={clinic.yonetici_profil_resmi_url} 
                   alt="Yönetici Profil Resmi" 
                   style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50%' }} 
                 />
