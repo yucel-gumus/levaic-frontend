@@ -94,11 +94,9 @@ const deleteService = async (id) => {
  */
 const getServicesByConsultant = async (consultantId) => {
   try {
-    console.log("getServicesByConsultant çağrıldı, consultantId:", consultantId);
     
     // Önce tüm hizmetleri alıyoruz
     const response = await serviceService.getAll();
-    console.log("Tüm hizmetler yüklendi, toplam:", response?.data?.length || 0);
     
     // Gelen verileri filtreleme
     if (response?.data?.length > 0) {
@@ -107,27 +105,20 @@ const getServicesByConsultant = async (consultantId) => {
         ? consultantId._id 
         : consultantId;
       
-      console.log("Normalize edilmiş danışman ID'si:", normalizedConsultantId);
       
       // Hizmetleri filtrele
       const filteredData = response.data.filter(service => {
-        console.log(`Hizmet değerlendiriliyor: ${service.hizmet_adi || 'İsimsiz'} (${service._id})`);
         
         // Danışmanlar alanını kontrol et
         if (!service.danismanlar) {
-          console.log(`  - Danışmanlar alanı yok`);
           return false;
         }
         
         if (!Array.isArray(service.danismanlar)) {
-          console.log(`  - Danışmanlar dizi değil: ${typeof service.danismanlar}`);
           return false;
         }
         
-        // Danışmanları log'la
-        console.log(`  - Danışman listesi (${service.danismanlar.length}):`, 
-          service.danismanlar.map(d => typeof d === 'object' ? d._id : d));
-        
+      
         // Danışman ID eşleşmesini kontrol et
         const hasConsultant = service.danismanlar.some(danisman => {
           if (!danisman) {
@@ -141,32 +132,13 @@ const getServicesByConsultant = async (consultantId) => {
           
           // String olarak karşılaştırma yapalım (MongoDB bazen ObjectID kullanıyor)
           const match = String(danismanId) === String(normalizedConsultantId);
-          console.log(`    - Karşılaştırma: ${danismanId} === ${normalizedConsultantId} => ${match}`);
           return match;
         });
         
-        // Sonucu log'la
-        if (hasConsultant) {
-          console.log(`  ✓ Eşleşme bulundu: ${service.hizmet_adi || 'İsimsiz'}`);
-        } else {
-          console.log(`  ✗ Eşleşme yok`);
-        }
         
         return hasConsultant;
       });
       
-      // Sonucu log'la
-      console.log(`Filtreleme sonucu: ${filteredData.length}/${response.data.length} hizmet eşleşti`);
-      
-      // Eşleşen hizmetlerin listesini göster
-      if (filteredData.length > 0) {
-        console.log("Eşleşen hizmetler:", filteredData.map(s => ({
-          id: s._id,
-          ad: s.hizmet_adi || s.ad
-        })));
-      } else {
-        console.log("Hiç hizmet eşleşmedi!");
-      }
       
       return {
         ...response,

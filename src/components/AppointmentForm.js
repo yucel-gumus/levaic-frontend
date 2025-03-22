@@ -94,7 +94,6 @@ const AppointmentForm = ({
   };
 
   const handleDanismanlarChange = async (selectedValues) => {
-    console.log("handleDanismanlarChange çağrıldı, selectedValues:", selectedValues);
     
     setAppointment({ 
       ...appointment, 
@@ -104,17 +103,13 @@ const AppointmentForm = ({
     
     if (selectedValues.length === 1) {
       const consultantId = selectedValues[0];
-      console.log("Tek danışman seçildi, consultantId:", consultantId);
       
       if (isEdit && parentLoadConsultantServices) {
-        console.log("Edit modunda, parentLoadConsultantServices çağrılıyor");
         await parentLoadConsultantServices(consultantId);
       } else {
-        console.log("Normal mod, loadConsultantServices çağrılıyor");
         await loadConsultantServices(consultantId);
       }
     } else {
-      console.log("Hiç danışman seçilmedi veya birden fazla seçildi, services temizleniyor");
       setServices([]);
       setSelectedService(null);
     }
@@ -122,23 +117,20 @@ const AppointmentForm = ({
 
   const loadConsultantServices = async (consultantId) => {
     if (!consultantId) {
-      console.log("loadConsultantServices: danışman ID'si yok");
       return;
     }
     
-    console.log("Hizmetler yükleniyor...");
     setLoadingServices(true);
     setServiceError(null);
     
     try {
       const response = await getServicesByConsultant(consultantId);
-      console.log("Danışman hizmetleri yüklendi:", response);
+     
       
       if (response && response.data) {
-        console.log("Hizmetler set ediliyor:", response.data);
+      
         setServices(response.data);
       } else {
-        console.log("Hizmet bulunamadı");
         setServices([]);
       }
     } catch (err) {
@@ -152,13 +144,11 @@ const AppointmentForm = ({
 
   const handleServiceChange = (e) => {
     const { value } = e.target;
-    console.log("Seçilen hizmet değişti:", value);
     setAppointment({ ...appointment, hizmet: value });
     
     // Seçilen hizmeti bul
     if (value) {
       const service = services.find(s => s._id === value);
-      console.log("Bulunan hizmet:", service);
       setSelectedService(service);
     } else {
       setSelectedService(null);
