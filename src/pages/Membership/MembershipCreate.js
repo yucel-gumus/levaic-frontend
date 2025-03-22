@@ -25,7 +25,7 @@ const MembershipCreate = () => {
   const fetchClinics = useCallback(async () => {
     setClinicsLoading(true);
     try {
-      const response = await clinicService.getClinics();
+      const response = await clinicService.getAll();
       if (response.data && response.data.length > 0) {
         setClinics(response.data);
       } else {

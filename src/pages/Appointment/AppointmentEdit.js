@@ -37,11 +37,9 @@ const AppointmentEdit = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log("Randevu yükleniyor, id:", id);
       const response = await getAppointment(id);
       
       if (response && response.data) {
-        console.log("Gelen randevu verisi:", JSON.stringify(response.data));
         
         // Üye bilgisini işle
         const uyeBilgisi = response.data.uye;
@@ -54,14 +52,12 @@ const AppointmentEdit = () => {
         let klinikId = '';
         if (response.data.klinik) {
           klinikId = typeof response.data.klinik === 'object' ? response.data.klinik._id : response.data.klinik;
-          console.log("Klinik ID:", klinikId);
         }
         
         // Hizmet bilgisini işle
         let hizmetId = '';
         if (response.data.hizmet) {
           hizmetId = typeof response.data.hizmet === 'object' ? response.data.hizmet._id : response.data.hizmet;
-          console.log("Hizmet ID:", hizmetId);
         }
         
         // Danışman bilgisini doğru formata çevir
@@ -69,12 +65,9 @@ const AppointmentEdit = () => {
         if (response.data.danismanlar && Array.isArray(response.data.danismanlar)) {
           danismanIds = response.data.danismanlar.map(d => {
             const danismanId = typeof d === 'object' ? d._id : d;
-            console.log("Danışman dönüştürme:", JSON.stringify(d), "->", danismanId);
             return danismanId;
           });
-          console.log("Danışman ID'leri:", danismanIds);
         } else {
-          console.log("Danışmanlar dizisi yok veya geçersiz format:", response.data.danismanlar);
         }
         
         // İşlenmiş veriyi oluştur
@@ -86,7 +79,6 @@ const AppointmentEdit = () => {
           uye: uyeId
         };
         
-        console.log("İşlenmiş randevu verisi:", processedData);
         setAppointment(processedData);
         
         // Üye verilerini yükle
@@ -94,52 +86,33 @@ const AppointmentEdit = () => {
         
         // Klinik danışmanlarını yükle
         if (klinikId) {
-          console.log("Klinik danışmanları yükleniyor, klinikId:", klinikId);
           await loadClinicConsultants(klinikId);
         }
         
         // Danışman hizmetlerini yükle
         if (danismanIds.length > 0) {
           const consultantId = danismanIds[0];
-          console.log("İlk danışman ID'si ile hizmetler yükleniyor:", consultantId);
           
           try {
             const { getServicesByConsultant } = await import('../../services/serviceApi');
-            console.log("getServicesByConsultant fonksiyonu import edildi");
             
             const servicesResponse = await getServicesByConsultant(consultantId);
-            console.log("Danışmana ait hizmetler alındı, toplam:", servicesResponse?.data?.length || 0);
             
             if (servicesResponse?.data?.length > 0) {
-              // Hizmet verilerini loglayalım
-              servicesResponse.data.forEach((service, index) => {
-                console.log(`Hizmet ${index + 1}:`, {
-                  _id: service._id,
-                  ad: service.ad,
-                  hizmet_adi: service.hizmet_adi,
-                  kategori: service.kategori,
-                  hizmet_kategorisi: service.hizmet_kategorisi,
-                  fiyat: service.fiyat,
-                  ucret: service.ucret
-                });
-              });
+
               
-              console.log("Hizmetler state'e ayarlanıyor, adet:", servicesResponse.data.length);
               setServices(servicesResponse.data);
               
               // Hizmet ID'si ile eşleşen hizmeti bul
               if (hizmetId) {
                 const matchingService = servicesResponse.data.find(s => s._id === hizmetId);
                 if (matchingService) {
-                  console.log("Mevcut hizmet bulundu:", matchingService.hizmet_adi);
                 } else {
                   console.warn("Mevcut hizmet ID'si ile eşleşen hizmet bulunamadı:", hizmetId);
                   // Hizmet bulunamadıysa, ilk danışmana ait tüm hizmetleri getir
-                  console.log("Tüm hizmetler yüklenecek...");
                 }
               }
             } else {
-              console.log("Danışmana ait hizmet bulunamadı veya veri boş");
               setServices([]);
             }
           } catch (serviceErr) {
@@ -147,7 +120,6 @@ const AppointmentEdit = () => {
             setServices([]);
           }
         } else {
-          console.log("Danışman bilgisi yok, hizmetler yüklenemiyor");
         }
       } else {
         console.error("Randevu verisi alınamadı:", response);
@@ -193,37 +165,21 @@ const AppointmentEdit = () => {
 
   const loadConsultantServices = async (consultantId) => {
     if (!consultantId) {
-      console.log("loadConsultantServices: consultantId yok");
       return;
     }
     
-    console.log("loadConsultantServices çağrıldı, consultantId:", consultantId);
     
     try {
       const { getServicesByConsultant } = await import('../../services/serviceApi');
-      console.log("getServicesByConsultant fonksiyonu import edildi");
       
       const response = await getServicesByConsultant(consultantId);
-      console.log("Danışmana ait hizmetler alındı, toplam:", response?.data?.length || 0);
       
       if (response?.data?.length > 0) {
         // Hizmet verilerini loglayalım
-        response.data.forEach((service, index) => {
-          console.log(`Hizmet ${index + 1}:`, {
-            _id: service._id,
-            ad: service.ad,
-            hizmet_adi: service.hizmet_adi,
-            kategori: service.kategori,
-            hizmet_kategorisi: service.hizmet_kategorisi,
-            fiyat: service.fiyat,
-            ucret: service.ucret
-          });
-        });
+       
         
-        console.log("Hizmetler state'e ayarlanıyor, adet:", response.data.length);
         setServices(response.data);
       } else {
-        console.log("Hizmet verisi yok veya boş");
         setServices([]);
       }
     } catch (err) {

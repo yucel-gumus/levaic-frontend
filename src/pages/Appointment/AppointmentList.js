@@ -1,42 +1,81 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Table, Form, InputGroup } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
-import { toast } from 'react-hot-toast';
 import { appointmentService } from '../../services/appointmentApi';
-import Loader from '../../components/Loader';
-import StatusBadge from '../../components/StatusBadge';
-import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { formatApiError } from '../../services/utils';
+import { toast } from 'react-hot-toast';
 import ConfirmModal from '../../components/ConfirmModal';
+import { 
+  CalendarIcon, 
+  PlusIcon, 
+  FilterIcon, 
+  EditIcon, 
+  TrashIcon 
+} from '../../components/icons';
+import {
+  StyledCard,
+  StyledCardHeader,
+  StyledCardBody,
+  StatusBadge,
+  FilterPanel,
+  FilterTitle,
+  FilterRow,
+  FilterColumn,
+  FilterLabel,
+  FilterInput,
+  FilterSelect,
+  PrimaryButton,
+  SecondaryButton,
+  ButtonGroup,
+  ActionHeader,
+  dataTableCustomStyles
+} from '../../components/common/common.styles';
+
+const RANDEVU_DURUM_OPTIONS = [
+  { value: 'Beklemede', label: 'Beklemede' },
+  { value: 'Onaylandı', label: 'Onaylandı' },
+  { value: 'İptal Edildi', label: 'İptal Edildi' },
+  { value: 'Tamamlandı', label: 'Tamamlandı' }
+];
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [refreshData, setRefreshData] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+  
+  // Filtreleme durumları
+  const [filters, setFilters] = useState({
+    klinik: '',
+    danisman: '',
+    durum: '',
+    tarih_baslangic: '',
+    tarih_bitis: '',
+  });
 
   useEffect(() => {
-    loadAppointments();
-  }, [refreshData]);
+    fetchAppointments();
+  }, [currentPage, perPage]);
 
-  const loadAppointments = async () => {
+  const fetchAppointments = async () => {
     setLoading(true);
     try {
       const response = await appointmentService.getAll();
       if (response && response.data) {
         setAppointments(response.data);
+        setTotalRows(response.data.length);
       } else {
         setAppointments([]);
       }
       setError(null);
     } catch (err) {
-      setError('Randevular yüklenirken bir hata oluştu');
+      const errorMessage = formatApiError(err);
+      setError(errorMessage);
       toast.error('Randevular yüklenemedi');
     } finally {
       setLoading(false);
@@ -53,13 +92,51 @@ const AppointmentList = () => {
       setShowDeleteModal(false);
       setSelectedAppointment(null);
     } catch (err) {
-      toast.error('Randevu silinirken bir hata oluştu');
+      const errorMessage = formatApiError(err);
+      toast.error(`Randevu silinemedi: ${errorMessage}`);
     }
   };
 
   const confirmDelete = (appointment) => {
     setSelectedAppointment(appointment);
     setShowDeleteModal(true);
+  };
+
+  const handleFilterChange = (name, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      klinik: '',
+      danisman: '',
+      durum: '',
+      tarih_baslangic: '',
+      tarih_bitis: '',
+    });
+  };
+
+  const applyFilters = () => {
+    setCurrentPage(1);
+    fetchAppointments();
+  };
+
+  const hasActiveFilters = () => {
+    return Object.values(filters).some(value => value !== '');
+  };
+
+  const translateFilterKey = (key) => {
+    const translations = {
+      klinik: 'Klinik',
+      danisman: 'Danışman',
+      durum: 'Durum',
+      tarih_baslangic: 'Başlangıç Tarihi',
+      tarih_bitis: 'Bitiş Tarihi',
+    };
+    return translations[key] || key;
   };
 
   const formatDate = (dateString) => {
@@ -74,16 +151,6 @@ const AppointmentList = () => {
       });
     } catch (err) {
       return dateString || 'Geçersiz tarih';
-    }
-  };
-
-  const getStatusBadgeType = (status) => {
-    switch (status) {
-      case 'Beklemede': return 'warning';
-      case 'Onaylandı': return 'success';
-      case 'İptal Edildi': return 'danger';
-      case 'Tamamlandı': return 'info';
-      default: return 'secondary';
     }
   };
 
@@ -114,115 +181,203 @@ const AppointmentList = () => {
       selector: row => row.durum,
       sortable: true,
       cell: row => (
-        <StatusBadge type={getStatusBadgeType(row.durum)}>
-          {row.durum}
-        </StatusBadge>
+        <StatusBadge status={row.durum}>{row.durum}</StatusBadge>
       ),
     },
     {
       name: 'İşlemler',
       cell: row => (
-        <div className="d-flex gap-2">
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate(`/randevu/duzenle/${row._id}`)}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Link 
+            to={`/randevu/duzenle/${row._id}`}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              width: '32px', 
+              height: '32px', 
+              backgroundColor: '#2563eb', 
+              color: 'white', 
+              borderRadius: '6px' 
+            }}
+            title="Düzenle"
           >
-            <FontAwesomeIcon icon={faEdit} />
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
+            <EditIcon />
+          </Link>
+          <button 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              width: '32px', 
+              height: '32px', 
+              backgroundColor: '#ef4444', 
+              color: 'white', 
+              borderRadius: '6px', 
+              border: 'none', 
+              cursor: 'pointer' 
+            }}
             onClick={() => confirmDelete(row)}
+            title="Sil"
           >
-            <FontAwesomeIcon icon={faTrash} />
-          </Button>
+            <TrashIcon />
+          </button>
         </div>
       ),
+      button: true,
     },
   ];
 
-  const customStyles = {
-    headRow: {
-      style: {
-        backgroundColor: '#f8f9fa',
-        borderTopStyle: 'solid',
-        borderTopWidth: '1px',
-        borderTopColor: '#dfe3e8',
-      },
-    },
-    headCells: {
-      style: {
-        fontSize: '14px',
-        fontWeight: 'bold',
-        paddingLeft: '8px',
-        paddingRight: '8px',
-      },
-    },
-    rows: {
-      highlightOnHoverStyle: {
-        backgroundColor: '#f5f6f8',
-        borderBottomColor: '#EDEDED',
-        outline: '1px solid #EDEDED',
-      },
-    },
+  const renderFilterPanel = () => {
+    return (
+      <FilterPanel>
+        <FilterTitle>
+          <FilterIcon /> Randevu Filtreleme
+        </FilterTitle>
+        <FilterRow>
+          <FilterColumn>
+            <FilterLabel>Klinik</FilterLabel>
+            <FilterInput 
+              type="text" 
+              placeholder="Klinik adı ile ara..."
+              value={filters.klinik}
+              onChange={(e) => handleFilterChange('klinik', e.target.value)}
+            />
+          </FilterColumn>
+          <FilterColumn>
+            <FilterLabel>Danışman</FilterLabel>
+            <FilterInput 
+              type="text" 
+              placeholder="Danışman adı ile ara..."
+              value={filters.danisman}
+              onChange={(e) => handleFilterChange('danisman', e.target.value)}
+            />
+          </FilterColumn>
+          <FilterColumn>
+            <FilterLabel>Durum</FilterLabel>
+            <FilterSelect
+              value={filters.durum}
+              onChange={(e) => handleFilterChange('durum', e.target.value)}
+            >
+              <option value="">Tüm Durumlar</option>
+              {RANDEVU_DURUM_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </FilterSelect>
+          </FilterColumn>
+        </FilterRow>
+        <FilterRow>
+          <FilterColumn>
+            <FilterLabel>Başlangıç Tarihi</FilterLabel>
+            <FilterInput 
+              type="date" 
+              value={filters.tarih_baslangic}
+              onChange={(e) => handleFilterChange('tarih_baslangic', e.target.value)}
+            />
+          </FilterColumn>
+          <FilterColumn>
+            <FilterLabel>Bitiş Tarihi</FilterLabel>
+            <FilterInput 
+              type="date" 
+              value={filters.tarih_bitis}
+              onChange={(e) => handleFilterChange('tarih_bitis', e.target.value)}
+            />
+          </FilterColumn>
+          <FilterColumn style={{display: 'flex', alignItems: 'flex-end'}}>
+            <div style={{display: 'flex', gap: '10px', width: '100%'}}>
+              <PrimaryButton 
+                onClick={applyFilters}
+                style={{flex: 1}}
+              >
+                Filtrele
+              </PrimaryButton>
+              <SecondaryButton 
+                onClick={clearFilters}
+                style={{flex: 1}}
+              >
+                Temizle
+              </SecondaryButton>
+            </div>
+          </FilterColumn>
+        </FilterRow>
+        {hasActiveFilters() && (
+          <div style={{marginTop: '10px', fontSize: '0.9rem', color: '#4a5568'}}>
+            <strong>Aktif Filtreler:</strong> {Object.entries(filters)
+              .filter(([_, value]) => value !== '')
+              .map(([key, value]) => `${translateFilterKey(key)}: ${value}`)
+              .join(', ')}
+          </div>
+        )}
+      </FilterPanel>
+    );
   };
 
   return (
-    <Container fluid className="py-4">
-      <Row className="mb-4">
-        <Col>
-          <Card>
-            <Card.Body className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Randevular</h5>
-              <Button
-                as={Link}
-                to="/randevu/ekle"
-                variant="success"
-                className="d-flex align-items-center"
+    <>
+      <StyledCard>
+        <StyledCardHeader>
+          <ActionHeader>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <CalendarIcon style={{ marginRight: '10px', fontSize: '1.4rem', color: '#2563eb' }} />
+              <h2>Randevular</h2>
+            </div>
+            
+            <ButtonGroup>
+              <SecondaryButton 
+                onClick={() => setShowFilters(!showFilters)}
+                style={{ marginRight: '10px' }}
               >
-                <FontAwesomeIcon icon={faPlus} className="me-2" /> Yeni Randevu Ekle
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row>
-        <Col>
-          <Card>
-            <Card.Body>
-              {loading && <Loader />}
+                <FilterIcon />
+                Filtrele
+              </SecondaryButton>
               
-              {error && (
-                <div className="alert alert-danger" role="alert">
-                  {error}
-                </div>
-              )}
-              
-              {!loading && !error && appointments.length === 0 && (
-                <div className="alert alert-info" role="alert">
-                  Henüz kaydedilmiş randevu bulunmamaktadır. Yeni randevu eklemek için yukarıdaki butonu kullanabilirsiniz.
-                </div>
-              )}
-              
-              {!loading && !error && appointments.length > 0 && (
-                <DataTable
-                  columns={columns}
-                  data={appointments}
-                  pagination
-                  responsive
-                  highlightOnHover
-                  pointerOnHover
-                  customStyles={customStyles}
-                  noDataComponent="Randevu bulunamadı"
-                />
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
+              <PrimaryButton as={Link} to="/randevu/ekle">
+                <PlusIcon />
+                Yeni Randevu Ekle
+              </PrimaryButton>
+            </ButtonGroup>
+          </ActionHeader>
+        </StyledCardHeader>
+        
+        {showFilters && renderFilterPanel()}
+        
+        <StyledCardBody>
+          {loading ? (
+            <div>Yükleniyor...</div>
+          ) : error ? (
+            <div style={{ padding: '16px', backgroundColor: '#fee8e7', color: '#b91c1c', borderRadius: '8px', marginBottom: '20px' }}>
+              {error}
+            </div>
+          ) : appointments.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <p style={{ marginBottom: '16px', color: '#6b7280' }}>Henüz kaydedilmiş randevu bulunmamaktadır.</p>
+              <PrimaryButton as={Link} to="/randevu/ekle">
+                <PlusIcon style={{ marginRight: '8px' }} /> 
+                İlk Randevuyu Oluştur
+              </PrimaryButton>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={appointments}
+              pagination
+              customStyles={dataTableCustomStyles}
+              highlightOnHover
+              pointerOnHover
+              persistTableHead
+              paginationPerPage={perPage}
+              paginationTotalRows={totalRows}
+              paginationDefaultPage={currentPage}
+              onChangePage={page => setCurrentPage(page)}
+              onChangeRowsPerPage={newPerPage => setPerPage(newPerPage)}
+              paginationRowsPerPageOptions={[5, 10, 15, 20, 25]}
+            />
+          )}
+        </StyledCardBody>
+      </StyledCard>
+      
       <ConfirmModal
         show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
@@ -230,7 +385,7 @@ const AppointmentList = () => {
         title="Randevu Sil"
         message="Bu randevuyu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
       />
-    </Container>
+    </>
   );
 };
 

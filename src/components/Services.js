@@ -1,252 +1,41 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
-import styled from 'styled-components';
 import { serviceService, deleteService } from '../services/serviceApi';
 import { 
   FilterIcon, 
   SearchIcon, 
   PlusIcon, 
   EditIcon,
-  TrashIcon
+  TrashIcon,
+  ServiceIcon
 } from '../components/icons';
 import { HIZMET_KATEGORILERI, HIZMET_DURUMLARI } from '../constants';
 import { toast } from 'react-hot-toast';
-
-// Styled component tanımlamaları
-const StyledCard = styled.div`
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-`;
-
-const StyledCardHeader = styled.div`
-  padding: 20px;
-  border-bottom: 1px solid #e9ecef;
-`;
-
-const StyledCardBody = styled.div`
-  padding: 20px;
-`;
-
-const StatusBadge = styled.span`
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  background-color: ${props => 
-    props.status === 'Aktif' ? '#e6f7ee' :
-    props.status === 'Pasif' ? '#fee8e7' : '#fff4de'};
-  color: ${props => 
-    props.status === 'Aktif' ? '#0d6832' :
-    props.status === 'Pasif' ? '#d63031' : '#e2a03f'};
-`;
-
-// Yeni Filtreleme Paneli Bileşenleri
-const FilterPanel = styled.div`
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 25px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  border: 1px solid #eaedf2;
-  position: relative;
-  overflow: hidden;
-  margin-top: 20px;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 5px;
-    height: 100%;
-    background: linear-gradient(to bottom, #2563eb, #1e40af);
-  }
-`;
-
-const FilterTitle = styled.h6`
-  color: #2563eb;
-  font-weight: 600;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-
-  svg {
-    margin-right: 10px;
-    background-color: rgba(37, 99, 235, 0.1);
-    padding: 8px;
-    border-radius: 8px;
-  }
-`;
-
-const FilterRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 20px;
-`;
-
-const FilterColumn = styled.div`
-  flex: 1;
-  min-width: 200px;
-`;
-
-const FilterLabel = styled.label`
-  font-weight: 500;
-  color: #4a5568;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-  display: block;
-`;
-
-const FilterInput = styled.input`
-  width: 100%;
-  border-radius: 8px;
-  padding: 10px 15px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  background-color: #f8f9fa;
-  padding-left: ${props => props.hasIcon ? '40px' : '15px'};
-
-  &:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    background-color: #fff;
-    outline: none;
-  }
-
-  &::placeholder {
-    color: #a0aec0;
-    font-style: italic;
-  }
-`;
-
-const FilterSelect = styled.select`
-  width: 100%;
-  border-radius: 8px;
-  padding: 10px 15px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  background-color: #f8f9fa;
-  appearance: auto;
-
-  &:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    background-color: #fff;
-    outline: none;
-  }
-`;
-
-const SearchIconWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  
-  svg {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6b7280;
-    z-index: 1;
-  }
-`;
-
-const FilterActions = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-`;
-
-const FilterButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 42px;
-  border-radius: 8px;
-  padding: 0 20px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  
-  &.search {
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    
-    &:hover {
-      background-color: #1e40af;
-    }
-    
-    svg {
-      margin-right: 8px;
-    }
-  }
-  
-  &.clear {
-    background-color: #f8f9fa;
-    color: #4a5568;
-    border: 1px solid #cbd5e0;
-    
-    &:hover {
-      background-color: #edf2f7;
-    }
-    
-    svg {
-      margin-right: 8px;
-    }
-  }
-`;
-
-const FilterTags = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 15px;
-`;
-
-const FilterTag = styled.span`
-  display: inline-flex;
-  align-items: center;
-  background-color: #edf2f7;
-  padding: 6px 12px;
-  border-radius: 30px;
-  font-size: 0.8rem;
-  color: #4a5568;
-  font-weight: 500;
-  
-  svg {
-    cursor: pointer;
-    margin-left: 8px;
-    opacity: 0.7;
-    transition: all 0.2s ease;
-    
-    &:hover {
-      opacity: 1;
-      color: #2563eb;
-    }
-  }
-`;
-
-const ClearAllButton = styled.button`
-  background-color: transparent;
-  border: none;
-  color: #2563eb;
-  font-size: 0.85rem;
-  padding: 0;
-  cursor: pointer;
-  font-weight: 500;
-  margin-left: 15px;
-  
-  &:hover {
-    text-decoration: underline;
-  }
-`;
+import {
+  StyledCard,
+  StyledCardHeader,
+  StyledCardBody,
+  StatusBadge,
+  FilterPanel,
+  FilterTitle,
+  FilterRow,
+  FilterColumn,
+  FilterLabel,
+  FilterInput,
+  FilterSelect,
+  SearchIconWrapper,
+  PrimaryButton,
+  SecondaryButton,
+  ButtonGroup,
+  ActionHeader,
+  dataTableCustomStyles,
+  FilterTags,
+  FilterTag,
+  ClearAllButton,
+  FilterActions,
+  FilterButton
+} from '../components/common/common.styles';
 
 const Services = () => {
   const [services, setServices] = useState([]);
@@ -261,6 +50,7 @@ const Services = () => {
     telemed_hizmeti: ''
   });
   const [activeFilters, setActiveFilters] = useState({});
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     loadServices();
@@ -299,7 +89,7 @@ const Services = () => {
     });
 
     setFilteredServices(filtered);
-  }, [services, activeFilters]);
+  }, [services, activeFilters, hasActiveFilters]);
 
   // Sonra useEffect tanımı
   useEffect(() => {
@@ -344,9 +134,24 @@ const Services = () => {
   };
 
   const handleFilterChange = (name, value) => {
-    setFilters({
-      ...filters,
-      [name]: value
+    setFilters(prev => {
+      const newFilters = {
+        ...prev,
+        [name]: value
+      };
+      
+      // Yeni aktif filtreleri oluştur
+      const newActiveFilters = {};
+      Object.keys(newFilters).forEach(key => {
+        if (newFilters[key]) {
+          newActiveFilters[key] = newFilters[key];
+        }
+      });
+      
+      // Aktif filtreleri güncelle
+      setActiveFilters(newActiveFilters);
+      
+      return newFilters;
     });
   };
 
@@ -358,18 +163,6 @@ const Services = () => {
       telemed_hizmeti: ''
     });
     setActiveFilters({});
-    setFilteredServices(services);
-  };
-
-  const applyFilters = () => {
-    // Boş olmayan filtreleri alıp active filters'a ekle
-    const newActiveFilters = {};
-    Object.keys(filters).forEach(key => {
-      if (filters[key]) {
-        newActiveFilters[key] = filters[key];
-      }
-    });
-    setActiveFilters(newActiveFilters);
   };
 
   const translateFilterKey = (key) => {
@@ -384,86 +177,95 @@ const Services = () => {
 
   // Filtreleme panelini render et
   const renderFilterPanel = () => {
-    // Form submit handler
-    const handleFormSubmit = (e) => {
-      e.preventDefault();
-      applyFilters();
-    };
-    
     return (
       <FilterPanel>
         <FilterTitle>
-          <FilterIcon /> Hizmet Filtreleme
+          <FilterIcon /> 
+          Hizmet Filtreleme
         </FilterTitle>
         
-        <form onSubmit={handleFormSubmit}>
-          <FilterRow>
-            <FilterColumn>
-              <FilterLabel>Hizmet Adı</FilterLabel>
-              <SearchIconWrapper>
-                <SearchIcon />
-                <FilterInput 
-                  type="text"
-                  placeholder="Hizmet adı ara..."
-                  value={filters.hizmet_adi}
-                  onChange={(e) => handleFilterChange('hizmet_adi', e.target.value)}
-                  hasIcon
-                />
-              </SearchIconWrapper>
-            </FilterColumn>
-            
-            <FilterColumn>
-              <FilterLabel>Kategori</FilterLabel>
-              <FilterSelect
-                value={filters.hizmet_kategorisi}
-                onChange={(e) => handleFilterChange('hizmet_kategorisi', e.target.value)}
-              >
-                <option value="">Tüm Kategoriler</option>
-                {HIZMET_KATEGORILERI.map(kategori => (
-                  <option key={kategori.value} value={kategori.value}>
-                    {kategori.label}
-                  </option>
-                ))}
-              </FilterSelect>
-            </FilterColumn>
-            
-            <FilterColumn>
-              <FilterLabel>Durum</FilterLabel>
-              <FilterSelect
-                value={filters.durum}
-                onChange={(e) => handleFilterChange('durum', e.target.value)}
-              >
-                <option value="">Tüm Durumlar</option>
-                {HIZMET_DURUMLARI.map(durum => (
-                  <option key={durum.value} value={durum.value}>
-                    {durum.label}
-                  </option>
-                ))}
-              </FilterSelect>
-            </FilterColumn>
-            
-            <FilterColumn>
-              <FilterLabel>Telemed Hizmeti</FilterLabel>
-              <FilterSelect
-                value={filters.telemed_hizmeti}
-                onChange={(e) => handleFilterChange('telemed_hizmeti', e.target.value)}
-              >
-                <option value="">Hepsi</option>
-                <option value="evet">Evet</option>
-                <option value="hayır">Hayır</option>
-              </FilterSelect>
-            </FilterColumn>
-          </FilterRow>
+        <FilterRow>
+          <FilterColumn>
+            <FilterLabel>Hizmet Adı</FilterLabel>
+            <SearchIconWrapper>
+              <SearchIcon />
+              <FilterInput 
+                type="text"
+                placeholder="Hizmet adı ara..."
+                value={filters.hizmet_adi}
+                onChange={(e) => handleFilterChange('hizmet_adi', e.target.value)}
+                hasIcon
+              />
+            </SearchIconWrapper>
+          </FilterColumn>
           
-          <FilterActions>
-            <FilterButton type="submit" className="search">
-              <SearchIcon /> Filtrele
-            </FilterButton>
-            <FilterButton type="button" className="clear" onClick={clearFilters}>
-              Temizle
-            </FilterButton>
-          </FilterActions>
-        </form>
+          <FilterColumn>
+            <FilterLabel>Kategori</FilterLabel>
+            <FilterSelect
+              value={filters.hizmet_kategorisi}
+              onChange={(e) => handleFilterChange('hizmet_kategorisi', e.target.value)}
+            >
+              <option value="">Tüm Kategoriler</option>
+              {HIZMET_KATEGORILERI.map(kategori => (
+                <option key={kategori.value} value={kategori.value}>
+                  {kategori.label}
+                </option>
+              ))}
+            </FilterSelect>
+          </FilterColumn>
+          
+          <FilterColumn>
+            <FilterLabel>Durum</FilterLabel>
+            <FilterSelect
+              value={filters.durum}
+              onChange={(e) => handleFilterChange('durum', e.target.value)}
+            >
+              <option value="">Tüm Durumlar</option>
+              {HIZMET_DURUMLARI.map(durum => (
+                <option key={durum.value} value={durum.value}>
+                  {durum.label}
+                </option>
+              ))}
+            </FilterSelect>
+          </FilterColumn>
+          
+          <FilterColumn>
+            <FilterLabel>Telemed Hizmeti</FilterLabel>
+            <FilterSelect
+              value={filters.telemed_hizmeti}
+              onChange={(e) => handleFilterChange('telemed_hizmeti', e.target.value)}
+            >
+              <option value="">Hepsi</option>
+              <option value="evet">Evet</option>
+              <option value="hayır">Hayır</option>
+            </FilterSelect>
+          </FilterColumn>
+        </FilterRow>
+        
+        <FilterActions>
+          <FilterButton className="search" onClick={filterServices}>
+            <SearchIcon />
+            Filtrele
+          </FilterButton>
+          
+          <FilterButton className="clear" onClick={clearFilters}>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="18" 
+              height="18" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            Temizle
+          </FilterButton>
+        </FilterActions>
         
         {hasActiveFilters() && (
           <FilterTags>
@@ -486,19 +288,41 @@ const Services = () => {
                     setActiveFilters(newActiveFilters);
                   }}
                 >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
               </FilterTag>
             ))}
-            <ClearAllButton onClick={clearFilters}>Tümünü Temizle</ClearAllButton>
+            {filters.hizmet_adi && (
+              <FilterTag>
+                Arama: {filters.hizmet_adi}
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  onClick={() => handleFilterChange('hizmet_adi', '')}
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              </FilterTag>
+            )}
+            <ClearAllButton onClick={clearFilters}>Tüm filtreleri temizle</ClearAllButton>
           </FilterTags>
         )}
       </FilterPanel>
     );
   };
 
-  // DataTable sütun tanımları
+  // DataTable sütunları tanımla
   const columns = [
     {
       name: 'Hizmet Adı',
@@ -544,17 +368,32 @@ const Services = () => {
     },
     {
       name: 'İşlemler',
+      selector: row => row._id,
       cell: row => (
-        <div className="btn-group">
+        <div style={{ display: 'flex', gap: '8px' }}>
           <Link 
             to={`/hizmet/duzenle/${row._id}`} 
-            className="btn btn-sm btn-outline-primary"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', backgroundColor: '#2563eb', color: 'white', borderRadius: '6px' }}
+            title="Düzenle"
           >
             <EditIcon />
           </Link>
           <button
             onClick={() => handleDelete(row._id)}
-            className={`btn btn-sm btn-outline-danger ${deleting === row._id ? 'disabled' : ''}`}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              width: '32px', 
+              height: '32px', 
+              backgroundColor: '#ef4444', 
+              color: 'white', 
+              borderRadius: '6px', 
+              border: 'none', 
+              cursor: 'pointer' 
+            }}
+            title="Sil"
+            disabled={deleting === row._id}
           >
             {deleting === row._id ? (
               <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -570,44 +409,82 @@ const Services = () => {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Yükleniyor...</span>
-        </div>
-      </div>
+      <StyledCard>
+        <StyledCardHeader>
+          <ActionHeader>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <ServiceIcon style={{ marginRight: '10px', fontSize: '1.4rem', color: '#2563eb' }} />
+              <h2>Hizmetler</h2>
+            </div>
+          </ActionHeader>
+        </StyledCardHeader>
+        <StyledCardBody>
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>Yükleniyor...</div>
+        </StyledCardBody>
+      </StyledCard>
     );
   }
 
   return (
-    <div>
-      <StyledCard>
-        <StyledCardHeader className="d-flex justify-content-between align-items-center">
-          <h5 className="m-0 font-weight-bold">Hizmetler</h5>
-          <Link to="/hizmet/ekle" className="btn btn-primary">
-            <PlusIcon className="me-2" /> Yeni Hizmet Ekle
-          </Link>
-        </StyledCardHeader>
-        
-        <StyledCardBody>
-          {error && (
-            <div className="alert alert-danger mb-4">{error}</div>
-          )}
+    <StyledCard>
+      <StyledCardHeader>
+        <ActionHeader>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <ServiceIcon style={{ marginRight: '10px', fontSize: '1.4rem', color: '#2563eb' }} />
+            <h2>Hizmetler</h2>
+          </div>
           
-          {renderFilterPanel()}
-          
+          <ButtonGroup>
+            <SecondaryButton 
+              onClick={() => setShowFilters(!showFilters)}
+              style={{ marginRight: '10px' }}
+            >
+              <FilterIcon />
+              Filtrele
+            </SecondaryButton>
+            
+            <PrimaryButton as={Link} to="/hizmet/ekle">
+              <PlusIcon />
+              Yeni Hizmet
+            </PrimaryButton>
+          </ButtonGroup>
+        </ActionHeader>
+      </StyledCardHeader>
+      
+      {showFilters && renderFilterPanel()}
+      
+      <StyledCardBody>
+        {loading ? (
+          <div>Yükleniyor...</div>
+        ) : error ? (
+          <div style={{ padding: '16px', backgroundColor: '#fee8e7', color: '#b91c1c', borderRadius: '8px', marginBottom: '20px' }}>
+            {error}
+          </div>
+        ) : filteredServices.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <p style={{ marginBottom: '16px', color: '#6b7280' }}>Gösterilecek hizmet bulunmamaktadır.</p>
+            <PrimaryButton as={Link} to="/hizmet/ekle">
+              <PlusIcon style={{ marginRight: '8px' }} /> 
+              Yeni Hizmet Ekle
+            </PrimaryButton>
+          </div>
+        ) : (
           <DataTable
             columns={columns}
             data={filteredServices}
             pagination
-            responsive
-            striped
+            paginationResetDefaultPage={false}
+            customStyles={dataTableCustomStyles}
+            progressPending={loading || Boolean(deleting)}
             highlightOnHover
             pointerOnHover
-            noDataComponent="Gösterilecek hizmet bulunamadı."
+            persistTableHead
+            paginationPerPage={10}
+            paginationRowsPerPageOptions={[5, 10, 15, 20, 25]}
           />
-        </StyledCardBody>
-      </StyledCard>
-    </div>
+        )}
+      </StyledCardBody>
+    </StyledCard>
   );
 };
 

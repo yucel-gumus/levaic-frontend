@@ -138,6 +138,7 @@ const ServiceEdit = () => {
       isLoading={isLoading}
       error={error}
       submitButtonText="Güncelle"
+      onCancel={handleCancel}
     />
   );
 };
