@@ -9,7 +9,7 @@ import {
   EditIcon,
   TrashIcon,
   ServiceIcon
-} from '../components/icons';
+} from './icons';
 import { HIZMET_KATEGORILERI, HIZMET_DURUMLARI } from '../constants';
 import { toast } from 'react-hot-toast';
 import {
@@ -35,7 +35,7 @@ import {
   ClearAllButton,
   FilterActions,
   FilterButton
-} from '../components/common/common.styles';
+} from './common/common.styles';
 
 const Services = () => {
   const [services, setServices] = useState([]);
