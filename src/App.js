@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -29,6 +28,9 @@ import Profile from './pages/Profile/Profile';
 import ServiceList from './pages/Service/ServiceList';
 import ServiceCreate from './pages/Service/ServiceCreate';
 import ServiceEdit from './pages/Service/ServiceEdit';
+import AppointmentList from './pages/Appointment/AppointmentList';
+import AppointmentCreate from './pages/Appointment/AppointmentCreate';
+import AppointmentEdit from './pages/Appointment/AppointmentEdit';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -170,11 +172,45 @@ function App() {
               </MainLayout>
             </ProtectedRoute>
           } />
+          
+          {/* Appointment Routes */}
+          <Route path="/randevular" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <AppointmentList />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/randevu/ekle" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <AppointmentCreate />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/randevu/duzenle/:id" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <AppointmentEdit />
+              </MainLayout>
+            </ProtectedRoute>
+          } />
 
           {/* Catch all redirect to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-        <ToastContainer position="top-right" autoClose={5000} newestOnTop />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 5000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+          }}
+        />
       </div>
     </Router>
   );

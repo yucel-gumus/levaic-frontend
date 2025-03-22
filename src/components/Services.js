@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
 import styled from 'styled-components';
-import { getServices, deleteService } from '../services/serviceApi';
+import { serviceService, deleteService } from '../services/serviceApi';
 import { 
   FilterIcon, 
   SearchIcon, 
@@ -11,6 +11,7 @@ import {
   TrashIcon
 } from '../components/icons';
 import { HIZMET_KATEGORILERI, HIZMET_DURUMLARI } from '../constants';
+import { toast } from 'react-hot-toast';
 
 // Styled component tanımlamaları
 const StyledCard = styled.div`
@@ -249,8 +250,10 @@ const ClearAllButton = styled.button`
 
 const Services = () => {
   const [services, setServices] = useState([]);
+  const [filteredServices, setFilteredServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [filters, setFilters] = useState({
     hizmet_adi: '',
     hizmet_kategorisi: '',
@@ -258,37 +261,85 @@ const Services = () => {
     telemed_hizmeti: ''
   });
   const [activeFilters, setActiveFilters] = useState({});
-  const [filteredServices, setFilteredServices] = useState([]);
 
   useEffect(() => {
     loadServices();
   }, []);
 
+  // Önce hasActiveFilters fonksiyonunu tanımla
+  const hasActiveFilters = () => {
+    return Object.keys(activeFilters).length > 0;
+  };
+
+  // Sonra filterServices tanımla
+  const filterServices = useCallback(() => {
+    if (!hasActiveFilters()) {
+      setFilteredServices(services);
+      return;
+    }
+
+    const filtered = services.filter(service => {
+      return Object.keys(activeFilters).every(key => {
+        const filterValue = activeFilters[key].toLowerCase();
+        
+        // Telemed hizmeti kontrolü
+        if (key === 'telemed_hizmeti') {
+          if (filterValue === 'evet') {
+            return service.telemed_hizmeti === true;
+          } else if (filterValue === 'hayır') {
+            return service.telemed_hizmeti === false;
+          }
+          return true;
+        }
+        
+        // Diğer string alanlar için kontrol
+        const serviceValue = String(service[key] || '').toLowerCase();
+        return serviceValue.includes(filterValue);
+      });
+    });
+
+    setFilteredServices(filtered);
+  }, [services, activeFilters]);
+
+  // Sonra useEffect tanımı
   useEffect(() => {
     // Filtreleri uygula
     filterServices();
-  }, [services, activeFilters]);
+  }, [services, activeFilters, filterServices]);
 
   const loadServices = async () => {
     try {
-      const data = await getServices();
+      setLoading(true);
+      const { data } = await serviceService.getAll();
       setServices(data);
       setFilteredServices(data);
-      setLoading(false);
+      setError(null);
     } catch (err) {
       setError('Hizmetler yüklenirken bir hata oluştu');
+      toast.error('Hizmetler yüklenirken bir hata oluştu: ' + err.message);
+    } finally {
       setLoading(false);
     }
   };
 
+  // Güvenlik için fetchServices fonksiyonunu loadServices olarak yeniden adlandırıyorum
+  const fetchServices = loadServices;
+
   const handleDelete = async (id) => {
-    if (window.confirm('Bu hizmeti silmek istediğinizden emin misiniz?')) {
-      try {
-        await deleteService(id);
-        setServices(services.filter(service => service._id !== id));
-      } catch (err) {
-        setError('Hizmet silinirken bir hata oluştu');
-      }
+    if (!window.confirm('Bu hizmeti silmek istediğinize emin misiniz?')) {
+      return;
+    }
+    
+    try {
+      setDeleting(id);
+      await deleteService(id);
+      fetchServices();
+      toast.success('Hizmet başarıyla silindi');
+    } catch (err) {
+      toast.error('Hizmet silinirken bir hata oluştu: ' + err.message);
+      setError('Hizmet silinirken bir hata oluştu');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -321,10 +372,6 @@ const Services = () => {
     setActiveFilters(newActiveFilters);
   };
 
-  const hasActiveFilters = () => {
-    return Object.keys(activeFilters).length > 0;
-  };
-
   const translateFilterKey = (key) => {
     const translations = {
       hizmet_adi: 'Hizmet Adı',
@@ -335,106 +382,88 @@ const Services = () => {
     return translations[key] || key;
   };
 
-  const filterServices = () => {
-    if (!hasActiveFilters()) {
-      setFilteredServices(services);
-      return;
-    }
-
-    const filtered = services.filter(service => {
-      return Object.keys(activeFilters).every(key => {
-        const filterValue = activeFilters[key].toLowerCase();
-        if (key === 'telemed_hizmeti') {
-          if (filterValue === 'evet') {
-            return service.telemed_hizmeti === true;
-          } else if (filterValue === 'hayır') {
-            return service.telemed_hizmeti === false;
-          }
-          return true;
-        }
-        
-        const serviceValue = String(service[key] || '').toLowerCase();
-        return serviceValue.includes(filterValue);
-      });
-    });
-
-    setFilteredServices(filtered);
-  };
-
   // Filtreleme panelini render et
   const renderFilterPanel = () => {
+    // Form submit handler
+    const handleFormSubmit = (e) => {
+      e.preventDefault();
+      applyFilters();
+    };
+    
     return (
       <FilterPanel>
         <FilterTitle>
           <FilterIcon /> Hizmet Filtreleme
         </FilterTitle>
         
-        <FilterRow>
-          <FilterColumn>
-            <FilterLabel>Hizmet Adı</FilterLabel>
-            <SearchIconWrapper>
-              <SearchIcon />
-              <FilterInput 
-                type="text"
-                placeholder="Hizmet adı ara..."
-                value={filters.hizmet_adi}
-                onChange={(e) => handleFilterChange('hizmet_adi', e.target.value)}
-                hasIcon
-              />
-            </SearchIconWrapper>
-          </FilterColumn>
+        <form onSubmit={handleFormSubmit}>
+          <FilterRow>
+            <FilterColumn>
+              <FilterLabel>Hizmet Adı</FilterLabel>
+              <SearchIconWrapper>
+                <SearchIcon />
+                <FilterInput 
+                  type="text"
+                  placeholder="Hizmet adı ara..."
+                  value={filters.hizmet_adi}
+                  onChange={(e) => handleFilterChange('hizmet_adi', e.target.value)}
+                  hasIcon
+                />
+              </SearchIconWrapper>
+            </FilterColumn>
+            
+            <FilterColumn>
+              <FilterLabel>Kategori</FilterLabel>
+              <FilterSelect
+                value={filters.hizmet_kategorisi}
+                onChange={(e) => handleFilterChange('hizmet_kategorisi', e.target.value)}
+              >
+                <option value="">Tüm Kategoriler</option>
+                {HIZMET_KATEGORILERI.map(kategori => (
+                  <option key={kategori.value} value={kategori.value}>
+                    {kategori.label}
+                  </option>
+                ))}
+              </FilterSelect>
+            </FilterColumn>
+            
+            <FilterColumn>
+              <FilterLabel>Durum</FilterLabel>
+              <FilterSelect
+                value={filters.durum}
+                onChange={(e) => handleFilterChange('durum', e.target.value)}
+              >
+                <option value="">Tüm Durumlar</option>
+                {HIZMET_DURUMLARI.map(durum => (
+                  <option key={durum.value} value={durum.value}>
+                    {durum.label}
+                  </option>
+                ))}
+              </FilterSelect>
+            </FilterColumn>
+            
+            <FilterColumn>
+              <FilterLabel>Telemed Hizmeti</FilterLabel>
+              <FilterSelect
+                value={filters.telemed_hizmeti}
+                onChange={(e) => handleFilterChange('telemed_hizmeti', e.target.value)}
+              >
+                <option value="">Hepsi</option>
+                <option value="evet">Evet</option>
+                <option value="hayır">Hayır</option>
+              </FilterSelect>
+            </FilterColumn>
+          </FilterRow>
           
-          <FilterColumn>
-            <FilterLabel>Kategori</FilterLabel>
-            <FilterSelect
-              value={filters.hizmet_kategorisi}
-              onChange={(e) => handleFilterChange('hizmet_kategorisi', e.target.value)}
-            >
-              <option value="">Tüm Kategoriler</option>
-              {HIZMET_KATEGORILERI.map(kategori => (
-                <option key={kategori.value} value={kategori.value}>
-                  {kategori.label}
-                </option>
-              ))}
-            </FilterSelect>
-          </FilterColumn>
-          
-          <FilterColumn>
-            <FilterLabel>Durum</FilterLabel>
-            <FilterSelect
-              value={filters.durum}
-              onChange={(e) => handleFilterChange('durum', e.target.value)}
-            >
-              <option value="">Tüm Durumlar</option>
-              {HIZMET_DURUMLARI.map(durum => (
-                <option key={durum.value} value={durum.value}>
-                  {durum.label}
-                </option>
-              ))}
-            </FilterSelect>
-          </FilterColumn>
-          
-          <FilterColumn>
-            <FilterLabel>Telemed Hizmeti</FilterLabel>
-            <FilterSelect
-              value={filters.telemed_hizmeti}
-              onChange={(e) => handleFilterChange('telemed_hizmeti', e.target.value)}
-            >
-              <option value="">Hepsi</option>
-              <option value="evet">Evet</option>
-              <option value="hayır">Hayır</option>
-            </FilterSelect>
-          </FilterColumn>
-        </FilterRow>
-        
-        <FilterActions>
-          <FilterButton className="search" onClick={applyFilters}>
-            <SearchIcon /> Filtrele
-          </FilterButton>
-          <FilterButton className="clear" onClick={clearFilters}>
-            Temizle
-          </FilterButton>
-        </FilterActions>
+          <FilterActions>
+            <FilterButton type="submit" className="search">
+              <SearchIcon /> Filtrele
+            </FilterButton>
+            <FilterButton type="button" className="clear" onClick={clearFilters}>
+              Temizle
+            </FilterButton>
+          </FilterActions>
+        </form>
         
         {hasActiveFilters() && (
           <FilterTags>
@@ -489,7 +518,10 @@ const Services = () => {
     },
     {
       name: 'Süre',
-      selector: row => `${row.sure.saat}s ${row.sure.dakika}d`,
+      selector: row => {
+        if (!row.sure || typeof row.sure !== 'object') return 'Belirtilmemiş';
+        return `${row.sure.saat || 0}s ${row.sure.dakika || 0}d`;
+      },
       sortable: true
     },
     {
@@ -522,9 +554,13 @@ const Services = () => {
           </Link>
           <button
             onClick={() => handleDelete(row._id)}
-            className="btn btn-sm btn-outline-danger"
+            className={`btn btn-sm btn-outline-danger ${deleting === row._id ? 'disabled' : ''}`}
           >
-            <TrashIcon />
+            {deleting === row._id ? (
+              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            ) : (
+              <TrashIcon />
+            )}
           </button>
         </div>
       ),

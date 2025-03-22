@@ -21,12 +21,10 @@ const ClinicEdit = () => {
     const fetchClinicDetails = async () => {
       try {
         setLoading(true);
-        const response = await clinicService.getClinic(id);
+        const response = await clinicService.getById(id);
         setClinic(response.data);
-        setError(null);
       } catch (err) {
         setError('Klinik bilgileri yüklenirken bir hata oluştu: ' + err.message);
-        console.error('Klinik bilgileri yüklenemedi:', err);
       } finally {
         setLoading(false);
       }
@@ -40,12 +38,10 @@ const ClinicEdit = () => {
     
     try {
       setSaving(true);
-      await clinicService.updateClinic(id, clinic);
+      await clinicService.update(id, clinic);
       navigate('/klinik');
     } catch (err) {
       setError('Klinik güncellenirken bir hata oluştu: ' + err.message);
-      console.error('Klinik güncellenemedi:', err);
-    } finally {
       setSaving(false);
     }
   };

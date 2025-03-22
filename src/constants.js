@@ -116,7 +116,7 @@ export const validateMemberForm = (formData) => {
   if (!formData.dogum_tarihi?.trim()) {
     errors.push('Doğum tarihi gereklidir');
   } else if (!DATE_REGEX.test(formData.dogum_tarihi)) {
-    errors.push('Doğum tarihi GG.AA.YYYY formatında olmalıdır. Örnek: 01.01.2000');
+    errors.push('Doğum tarihi GG.AA.YYYY formatında olmalıdır');
   }
   
   // Diğer zorunlu alanlar
@@ -159,7 +159,7 @@ export const validateConsultantForm = (formData) => {
   if (!formData.dogum_tarihi?.trim()) {
     errors.push('Doğum tarihi gereklidir');
   } else if (!DATE_REGEX.test(formData.dogum_tarihi)) {
-    errors.push('Doğum tarihi GG.AA.YYYY formatında olmalıdır. Örnek: 01.01.2000');
+    errors.push('Doğum tarihi GG.AA.YYYY formatında olmalıdır');
   }
   
   // Tecrübe yılı kontrolü
@@ -194,4 +194,11 @@ export const HIZMET_DURUMLARI = [
 export const EVET_HAYIR_OPTIONS = [
   { value: true, label: 'Evet' },
   { value: false, label: 'Hayır' }
+];
+
+export const RANDEVU_DURUMLARI = [
+  { value: 'Beklemede', label: 'Beklemede' },
+  { value: 'Onaylandı', label: 'Onaylandı' },
+  { value: 'İptal Edildi', label: 'İptal Edildi' },
+  { value: 'Tamamlandı', label: 'Tamamlandı' }
 ]; 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MultiSelect } from './MultiSelect';
 import { 
   HIZMET_KATEGORILERI, 
@@ -8,6 +8,7 @@ import {
 import './Service.css';
 
 const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet', onCancel }) => {
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     onChange({
@@ -34,6 +35,45 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
       [name]: value === 'true'
     });
   };
+  
+  // Klinikleri işle ve ID'lere dönüştür
+  const handleKliniklerChange = (values) => {
+    // Değerlerin primitive olduğundan emin ol
+    const normalizedValues = values.map(value => 
+      typeof value === 'object' && value !== null ? value._id : value
+    );
+    
+    onChange({
+      ...service,
+      klinikler: normalizedValues
+    });
+  };
+  
+  // Danışmanları işle ve ID'lere dönüştür
+  const handleDanismanlarChange = (values) => {
+    // Değerlerin primitive olduğundan emin ol
+    const normalizedValues = values.map(value => 
+      typeof value === 'object' && value !== null ? value._id : value
+    );
+    
+    onChange({
+      ...service,
+      danismanlar: normalizedValues
+    });
+  };
+
+  if (!service) {
+    return <div>Servis verisi yükleniyor...</div>;
+  }
+
+  // Klinikler ve danışmanlar verilerinin doğru formatta olduğundan emin ol
+  const normalizedKlinikler = Array.isArray(service.klinikler) 
+    ? service.klinikler.map(klinik => typeof klinik === 'object' ? klinik._id : klinik)
+    : [];
+    
+  const normalizedDanismanlar = Array.isArray(service.danismanlar)
+    ? service.danismanlar.map(danisman => typeof danisman === 'object' ? danisman._id : danisman)
+    : [];
 
   return (
     <form onSubmit={onSubmit}>
@@ -52,7 +92,7 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
                 className="form-control"
                 id="hizmet_kategorisi"
                 name="hizmet_kategorisi"
-                value={service.hizmet_kategorisi}
+                value={service.hizmet_kategorisi || ''}
                 onChange={handleInputChange}
                 required
               >
@@ -69,7 +109,7 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
                 className="form-control"
                 id="hizmet_adi"
                 name="hizmet_adi"
-                value={service.hizmet_adi}
+                value={service.hizmet_adi || ''}
                 onChange={handleInputChange}
                 required
               />
@@ -85,7 +125,7 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
                   className="form-control"
                   id="ucret"
                   name="ucret"
-                  value={service.ucret}
+                  value={service.ucret || 0}
                   onChange={handleInputChange}
                   min="0"
                   step="0.01"
@@ -99,12 +139,12 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
                 className="form-control"
                 id="telemed_hizmeti"
                 name="telemed_hizmeti"
-                value={service.telemed_hizmeti}
+                value={service.telemed_hizmeti !== undefined ? service.telemed_hizmeti : false}
                 onChange={handleBooleanChange}
                 required
               >
                 {EVET_HAYIR_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                  <option key={option.value.toString()} value={option.value.toString()}>{option.label}</option>
                 ))}
               </select>
             </div>
@@ -114,13 +154,8 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
             <label htmlFor="klinikler" className="form-label">Klinikler</label>
             <MultiSelect
               options={service.klinikOptions || []}
-              selectedValues={service.klinikler}
-              onChange={(values) => {
-                onChange({
-                  ...service,
-                  klinikler: values
-                });
-              }}
+              selectedValues={normalizedKlinikler}
+              onChange={handleKliniklerChange}
               placeholder="Klinik seçiniz..."
               noOptionsMessage="Klinik bulunamadı"
               allSelectedMessage="Tüm klinikler seçildi"
@@ -131,13 +166,8 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
             <label htmlFor="danismanlar" className="form-label">Danışmanlar</label>
             <MultiSelect
               options={service.danismanOptions || []}
-              selectedValues={service.danismanlar}
-              onChange={(values) => {
-                onChange({
-                  ...service,
-                  danismanlar: values
-                });
-              }}
+              selectedValues={normalizedDanismanlar}
+              onChange={handleDanismanlarChange}
               placeholder="Danışman seçiniz..."
               noOptionsMessage="Danışman bulunamadı"
               allSelectedMessage="Tüm danışmanlar seçildi"
@@ -153,7 +183,7 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
                     type="number"
                     className="form-control"
                     name="saat"
-                    value={service.sure?.saat || 0}
+                    value={(service.sure?.saat !== undefined) ? service.sure.saat : 0}
                     onChange={handleDurationChange}
                     min="0"
                     max="24"
@@ -166,7 +196,7 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
                     type="number"
                     className="form-control"
                     name="dakika"
-                    value={service.sure?.dakika || 0}
+                    value={(service.sure?.dakika !== undefined) ? service.sure.dakika : 0}
                     onChange={handleDurationChange}
                     min="0"
                     max="59"
@@ -182,7 +212,7 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
                 className="form-control"
                 id="durum"
                 name="durum"
-                value={service.durum}
+                value={service.durum || 'Aktif'}
                 onChange={handleInputChange}
                 required
               >
@@ -201,12 +231,12 @@ const ServiceForm = ({ service, onChange, onSubmit, submitButtonText = 'Kaydet',
               className="form-control"
               id="coklu_secim"
               name="coklu_secim"
-              value={service.coklu_secim}
+              value={service.coklu_secim !== undefined ? service.coklu_secim : false}
               onChange={handleBooleanChange}
               required
             >
               {EVET_HAYIR_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+                <option key={option.value.toString()} value={option.value.toString()}>{option.label}</option>
               ))}
             </select>
           </div>

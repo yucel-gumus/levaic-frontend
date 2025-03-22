@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
 import styled from 'styled-components';
-import { consultantService } from '../../services/api';
+import { getConsultants, deleteConsultant } from '../../services/consultantApi';
 import { formatISODateToLocalDate, formatApiError } from '../../services/utils';
 import { CINSIYET_OPTIONS, UZMANLIK_ALANLARI_OPTIONS } from '../../constants';
 
@@ -299,7 +299,7 @@ const ConsultantList = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await consultantService.getConsultants();
+      const response = await getConsultants();
       
       // API'den gelen verileri formatlama
       const formattedConsultants = response.data.map(consultant => ({
@@ -310,8 +310,7 @@ const ConsultantList = () => {
       
       setConsultants(formattedConsultants);
     } catch (err) {
-      console.error('Danışmanlar yüklenirken hata:', err);
-      setError(formatApiError(err));
+      setError('Danışmanlar yüklenirken bir hata oluştu: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -323,17 +322,17 @@ const ConsultantList = () => {
 
   // Danışman silme işlemi
   const handleDeleteConsultant = useCallback(async (id) => {
-    if (!window.confirm('Bu danışmanı silmek istediğinizden emin misiniz?')) {
+    if (!window.confirm('Bu danışmanı silmek istediğinize emin misiniz?')) {
       return;
     }
     
     try {
       setLoading(true);
-      await consultantService.deleteConsultant(id);
+      await deleteConsultant(id);
       await fetchConsultants();
       alert('Danışman başarıyla silindi.');
     } catch (err) {
-      console.error('Danışman silinemedi:', err);
+      setError('Danışman silinirken bir hata oluştu: ' + err.message);
       alert(`Hata: ${formatApiError(err)}`);
     } finally {
       setLoading(false);

@@ -699,18 +699,20 @@
 }
 
 .status-badge.active {
-  background-color: rgba(76, 175, 80, 0.15);
-  color: #2e7d32;
+  background-color: #28a745;
 }
 
 .status-badge.inactive {
-  background-color: rgba(229, 57, 53, 0.15);
-  color: #c62828;
+  background-color: #dc3545;
 }
 
 .status-badge.pending {
-  background-color: rgba(255, 148, 86, 0.15);
-  color: #e65100;
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.status-badge.completed {
+  background-color: #17a2b8;
 }
 
 /* Clinic Page Styles */

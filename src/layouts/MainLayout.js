@@ -11,7 +11,7 @@ import {
   SettingsIcon
 } from '../components/icons';
 import authService from '../services/authService';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 
 const MainLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -48,6 +48,7 @@ const MainLayout = ({ children }) => {
     if (path.includes('/uyelik')) return 'membership';
     if (path.includes('/danisman')) return 'consultant';
     if (path.includes('/hizmet')) return 'services';
+    if (path.includes('/randevular')) return 'appointments';
     return '';
   };
 
@@ -115,6 +116,12 @@ const MainLayout = ({ children }) => {
                   {!sidebarCollapsed && <span className="nav-text">Hizmetler</span>}
                 </button>
               </li>
+              <li className={`nav-item ${getActiveTab() === 'appointments' ? 'active' : ''}`}>
+                <button onClick={() => navigate('/randevular')} className="nav-link">
+                  <span className="nav-icon"><ChartIcon /></span>
+                  {!sidebarCollapsed && <span className="nav-text">Randevular</span>}
+                </button>
+              </li>
             </ul>
           </nav>
         </div>
@@ -140,6 +147,7 @@ const MainLayout = ({ children }) => {
                 {getActiveTab() === 'membership' && 'Üyelik'}
                 {getActiveTab() === 'consultant' && 'Danışmanlar'}
                 {getActiveTab() === 'services' && 'Hizmetler'}
+                {getActiveTab() === 'appointments' && 'Randevular'}
               </h1>
             </div>
             

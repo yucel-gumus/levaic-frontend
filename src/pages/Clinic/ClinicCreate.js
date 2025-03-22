@@ -23,7 +23,6 @@ const ClinicCreate = () => {
       navigate('/klinik');
     } catch (err) {
       setError('Klinik kaydedilirken bir hata oluştu: ' + err.message);
-      console.error('Klinik kaydedilemedi:', err);
     } finally {
       setLoading(false);
     }

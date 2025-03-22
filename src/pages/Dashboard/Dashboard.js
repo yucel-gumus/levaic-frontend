@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { clinicService } from '../../services/api';
+import { getAppointments } from '../../services/appointmentApi';
 import { 
   ClinicIcon, 
   CheckIcon, 
@@ -11,43 +11,66 @@ import {
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const [clinics, setClinics] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
-    totalClinics: 0,
-    activeClinics: 0,
-    newClinicsToday: 0,
-    totalRevenue: 0
+    totalAppointments: 0,
+    completedAppointments: 0,
+    pendingAppointments: 0,
+    todayAppointments: 0
   });
 
   // Fetch data
   useEffect(() => {
-    fetchClinics();
-    fetchStats();
+    fetchAppointments();
   }, []);
 
-  const fetchClinics = async () => {
+  const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const response = await clinicService.getClinics();
-      setClinics(response.data);
+      const response = await getAppointments();
+      setAppointments(response.data);
+      
+      // Calculate statistics
+      const total = response.data.length;
+      const completed = response.data.filter(app => app.durum === 'Tamamlandı').length;
+      const pending = response.data.filter(app => app.durum === 'Beklemede').length;
+      
+      // Calculate today's appointments
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayApps = response.data.filter(app => {
+        const appDate = new Date(app.tarih);
+        appDate.setHours(0, 0, 0, 0);
+        return appDate.getTime() === today.getTime();
+      }).length;
+      
+      setStats({
+        totalAppointments: total,
+        completedAppointments: completed,
+        pendingAppointments: pending,
+        todayAppointments: todayApps
+      });
+      
       setError(null);
     } catch (err) {
-      setError('Klinikler yüklenirken bir hata oluştu: ' + err.message);
-      console.error('Klinikler yüklenemedi:', err);
+      setError('Randevular yüklenirken bir hata oluştu: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      const response = await clinicService.getTodayStats();
-      setStats(response.data);
-    } catch (err) {
-      console.error('İstatistikler yüklenemedi:', err);
-    }
+  // Format appointment date for display
+  const formatDate = (dateString) => {
+    const options = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    };
+    return new Date(dateString).toLocaleDateString('tr-TR', options);
   };
 
   return (
@@ -59,8 +82,8 @@ const Dashboard = () => {
             <ClinicIcon />
           </div>
           <div className="stat-info">
-            <h3>Toplam Klinik</h3>
-            <h2>{stats.totalClinics}</h2>
+            <h3>Toplam Randevu</h3>
+            <h2>{stats.totalAppointments}</h2>
           </div>
         </div>
 
@@ -69,8 +92,8 @@ const Dashboard = () => {
             <CheckIcon />
           </div>
           <div className="stat-info">
-            <h3>Aktif Klinik</h3>
-            <h2>{stats.activeClinics}</h2>
+            <h3>Tamamlanan Randevu</h3>
+            <h2>{stats.completedAppointments}</h2>
           </div>
         </div>
 
@@ -79,8 +102,8 @@ const Dashboard = () => {
             <PlusIcon />
           </div>
           <div className="stat-info">
-            <h3>Yeni Klinik (Bugün)</h3>
-            <h2>{stats.newClinicsToday}</h2>
+            <h3>Bekleyen Randevu</h3>
+            <h2>{stats.pendingAppointments}</h2>
           </div>
         </div>
 
@@ -89,17 +112,17 @@ const Dashboard = () => {
             <TrendUpIcon />
           </div>
           <div className="stat-info">
-            <h3>Toplam Gelir</h3>
-            <h2>{stats.totalRevenue ? `${stats.totalRevenue.toLocaleString()} ₺` : '0 ₺'}</h2>
+            <h3>Bugünkü Randevular</h3>
+            <h2>{stats.todayAppointments}</h2>
           </div>
         </div>
       </div>
       
-      {/* Recent Clinics Section */}
+      {/* Recent Appointments Section */}
       <div className="recent-list">
         <div className="list-header">
-          <h2>Son Eklenen Klinikler</h2>
-          <Link to="/klinik" className="view-all">
+          <h2>Son Eklenen Randevular</h2>
+          <Link to="/randevular" className="view-all">
             Tümünü Görüntüle
             <ArrowRightIcon />
           </Link>
@@ -115,32 +138,50 @@ const Dashboard = () => {
               <span className="visually-hidden">Yükleniyor...</span>
             </div>
           </div>
-        ) : clinics.length > 0 ? (
+        ) : appointments.length > 0 ? (
           <div className="table-responsive">
             <table className="table table-hover">
               <thead>
                 <tr>
-                  <th>Klinik Adı</th>
-                  <th>Yönetici</th>
-                  <th>Şehir</th>
+                  <th>Klinik</th>
+                  <th>Danışman</th>
+                  <th>Üye</th>
+                  <th>Tarih</th>
                   <th>Durum</th>
                   <th>İşlemler</th>
                 </tr>
               </thead>
               <tbody>
-                {clinics.slice(0, 5).map(clinic => (
-                  <tr key={clinic._id}>
-                    <td>{clinic.ad}</td>
-                    <td>{clinic.yonetici_ad} {clinic.yonetici_soyad}</td>
-                    <td>{clinic.sehir}</td>
+                {appointments.slice(0, 5).map(appointment => (
+                  <tr key={appointment._id}>
+                    <td>{appointment.klinik?.ad || 'Belirtilmemiş'}</td>
                     <td>
-                      <span className={`status-badge ${clinic.durum === 'Aktif' ? 'active' : clinic.durum === 'Pasif' ? 'inactive' : 'pending'}`}>
-                        {clinic.durum}
+                      {appointment.danismanlar && appointment.danismanlar.length > 0
+                        ? `${appointment.danismanlar[0].ad || ''} ${appointment.danismanlar[0].soyad || ''}`
+                        : 'Belirtilmemiş'}
+                    </td>
+                    <td>
+                      {appointment.uye 
+                        ? `${appointment.uye.ad || ''} ${appointment.uye.soyad || ''}`
+                        : 'Belirtilmemiş'}
+                    </td>
+                    <td>{formatDate(appointment.tarih)}</td>
+                    <td>
+                      <span className={`status-badge ${
+                        appointment.durum === 'Onaylandı' 
+                          ? 'active' 
+                          : appointment.durum === 'İptal Edildi' 
+                            ? 'inactive' 
+                            : appointment.durum === 'Tamamlandı'
+                              ? 'completed'
+                              : 'pending'
+                      }`}>
+                        {appointment.durum}
                       </span>
                     </td>
                     <td>
                       <Link 
-                        to={`/klinik/edit/${clinic._id}`}
+                        to={`/randevular/edit/${appointment._id}`}
                         className="btn btn-sm btn-primary me-2"
                       >
                         Düzenle
@@ -153,8 +194,8 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="alert alert-info">
-            Henüz klinik bulunmamaktadır. Yeni bir klinik eklemek için 
-            <Link to="/klinik/create" className="mx-1">buraya tıklayın</Link>.
+            Henüz randevu bulunmamaktadır. Yeni bir randevu eklemek için 
+            <Link to="/randevular/create" className="mx-1">buraya tıklayın</Link>.
           </div>
         )}
       </div>

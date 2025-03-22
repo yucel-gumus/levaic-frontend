@@ -1,31 +1,106 @@
-import { api } from './api';
+import { toast } from 'react-hot-toast';
+import { createBaseService } from './api';
+
+// Danışman servisi oluştur
+const consultantService = createBaseService('consultants');
 
 // Tüm danışmanları getir
-export const getConsultants = async () => {
-  const response = await api.get('/consultants');
-  return response.data;
+const getConsultants = async () => {
+  try {
+    const response = await consultantService.getAll();
+    return response;
+  } catch (error) {
+    toast.error('Danışmanlar yüklenirken bir hata oluştu');
+    throw error;
+  }
+};
+
+// Belirli bir kliniğe ait danışmanları getir
+const getConsultantsByClinic = async (clinicId) => {
+  try {
+    const response = await consultantService.getAll();
+    // Gelen verileri filtreleme
+    if (response && response.data) {
+     
+      
+      const filteredData = response.data.filter(consultant => {
+        // Danışmanın klinik bilgisinin farklı formatlarını kontrol et
+        if (!consultant.klinik) return false;
+        
+        const consultantClinicId = typeof consultant.klinik === 'object' 
+          ? consultant.klinik._id 
+          : consultant.klinik;
+        
+       
+        return consultantClinicId === clinicId;
+      });
+      
+      return {
+        ...response,
+        data: filteredData
+      };
+    }
+    return response;
+  } catch (error) {
+ 
+    toast.error('Klinik danışmanları yüklenirken bir hata oluştu');
+    throw error;
+  }
 };
 
 // Danışman detaylarını getir
-export const getConsultant = async (id) => {
-  const response = await api.get(`/consultants/${id}`);
-  return response.data;
+const getConsultant = async (id) => {
+  try {
+    const response = await consultantService.getById(id);
+    return response;
+  } catch (error) {
+    toast.error('Danışman bilgileri alınamadı');
+    throw error;
+  }
 };
 
 // Yeni danışman oluştur
-export const createConsultant = async (consultantData) => {
-  const response = await api.post('/consultants', consultantData);
-  return response.data;
+const createConsultant = async (consultantData) => {
+  try {
+    const response = await consultantService.create(consultantData);
+    toast.success('Danışman başarıyla oluşturuldu');
+    return response;
+  } catch (error) {
+    toast.error('Danışman oluşturulurken bir hata oluştu');
+    throw error;
+  }
 };
 
 // Danışman güncelle
-export const updateConsultant = async (id, consultantData) => {
-  const response = await api.put(`/consultants/${id}`, consultantData);
-  return response.data;
+const updateConsultant = async (id, consultantData) => {
+  try {
+    const response = await consultantService.update(id, consultantData);
+    toast.success('Danışman başarıyla güncellendi');
+    return response;
+  } catch (error) {
+    toast.error('Danışman güncellenirken bir hata oluştu');
+    throw error;
+  }
 };
 
 // Danışman sil
-export const deleteConsultant = async (id) => {
-  const response = await api.delete(`/consultants/${id}`);
-  return response.data;
+const deleteConsultant = async (id) => {
+  try {
+    const response = await consultantService.delete(id);
+    toast.success('Danışman başarıyla silindi');
+    return response;
+  } catch (error) {
+    toast.error('Danışman silinirken bir hata oluştu');
+    throw error;
+  }
+};
+
+export {
+  consultantService,
+  getConsultants,
+  getConsultant,
+  createConsultant,
+  updateConsultant,
+  deleteConsultant,
+  getConsultantsByClinic
 }; 

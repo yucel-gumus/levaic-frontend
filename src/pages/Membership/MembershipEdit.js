@@ -30,13 +30,15 @@ const MembershipEdit = () => {
       setInitialLoading(true);
       setError(null);
       setMemberDataError(null);
-
-      // Klinik verilerini getir - bunu önce yapıyoruz çünkü üye verisine bağlı değil
+      
+      // Klinik verisini global olarak tanımla
       let clinicsData = [];
+
+      // Tüm klinikleri yükle
       try {
-        const clinicsResponse = await clinicService.getClinics();
+        const clinicsResponse = await clinicService.getAll();
         
-        if (clinicsResponse.data && clinicsResponse.data.length > 0) {
+        if (clinicsResponse && clinicsResponse.data) {
           clinicsData = clinicsResponse.data;
           setClinics(clinicsData);
         } else {
@@ -48,7 +50,7 @@ const MembershipEdit = () => {
 
       // Üye detaylarını getir
       try {
-        const memberResponse = await membershipService.getMember(id);
+        const memberResponse = await membershipService.getById(id);
         
         if (memberResponse && memberResponse.data) {
           let memberData = memberResponse.data;
@@ -108,7 +110,7 @@ const MembershipEdit = () => {
     
     try {
       setLoading(true);
-      await membershipService.updateMember(id, formData);
+      await membershipService.update(id, formData);
       navigate('/uyelik');
     } catch (err) {
       setError(formatApiError(err));

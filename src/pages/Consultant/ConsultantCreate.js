@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { consultantService, clinicService } from '../../services/api';
+import { clinicService } from '../../services/api';
+import { createConsultant } from '../../services/consultantApi';
 import { formatApiError } from '../../services/utils';
 import { EMPTY_CONSULTANT, validateConsultantForm } from '../../constants';
 import ConsultantForm from '../../components/consultant/ConsultantForm';
@@ -25,7 +26,7 @@ const ConsultantCreate = () => {
   const fetchClinics = useCallback(async () => {
     setClinicsLoading(true);
     try {
-      const response = await clinicService.getClinics();
+      const response = await clinicService.getAll();
       if (response.data && response.data.length > 0) {
         setClinics(response.data);
       } else {
@@ -65,7 +66,7 @@ const ConsultantCreate = () => {
     
     try {
       setLoading(true);
-      await consultantService.createConsultant(formData);
+      await createConsultant(formData);
       navigate('/danisman');
     } catch (err) {
       setError(formatApiError(err));

@@ -309,7 +309,7 @@ const MembershipList = () => {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const response = await membershipService.getMembers();
+      const response = await membershipService.getAll();
       
       // API'den gelen verileri formatlama
       const formattedMembers = response.data.map(member => ({
@@ -321,8 +321,7 @@ const MembershipList = () => {
       setMembers(formattedMembers);
       setError(null);
     } catch (err) {
-      setError('Üyeler yüklenirken bir hata oluştu: ' + formatApiError(err));
-      console.error('Üyeler yüklenemedi:', err);
+      setError('Üyeler yüklenirken bir hata oluştu: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -330,13 +329,15 @@ const MembershipList = () => {
 
   // Üye silme işlemi
   const handleDelete = async (id) => {
-    if (window.confirm('Bu üyeyi silmek istediğinizden emin misiniz?')) {
+    if (window.confirm('Bu üyeyi silmek istediğinize emin misiniz?')) {
       try {
-        await membershipService.deleteMember(id);
+        setLoading(true);
+        await membershipService.delete(id);
         setMembers(members.filter(member => member._id !== id));
       } catch (err) {
-        setError('Üye silinirken bir hata oluştu: ' + formatApiError(err));
-        console.error('Üye silinemedi:', err);
+        setError('Üye silinirken bir hata oluştu: ' + err.message);
+      } finally {
+        setLoading(false);
       }
     }
   };

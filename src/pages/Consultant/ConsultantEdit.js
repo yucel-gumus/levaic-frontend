@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { consultantService, clinicService } from '../../services/api';
+import { clinicService } from '../../services/api';
+import { getConsultant, updateConsultant } from '../../services/consultantApi';
 import { formatISODateToLocalDate, formatApiError } from '../../services/utils';
 import { validateConsultantForm } from '../../constants';
 import ConsultantForm from '../../components/consultant/ConsultantForm';
@@ -30,8 +31,8 @@ const ConsultantEdit = () => {
       setError(null);
       
       const [consultantResponse, clinicsResponse] = await Promise.all([
-        consultantService.getConsultant(id),
-        clinicService.getClinics()
+        getConsultant(id),
+        clinicService.getAll()
       ]);
       
       if (clinicsResponse.data && clinicsResponse.data.length > 0) {
@@ -47,14 +48,13 @@ const ConsultantEdit = () => {
       const formattedConsultant = {
         ...consultantData,
         dogum_tarihi: formatISODateToLocalDate(consultantData.dogum_tarihi),
-        klinik: consultantData.klinik._id
+        klinik: consultantData.klinik?._id || ''
       };
       
       setConsultant(formattedConsultant);
       setFormData(formattedConsultant);
     } catch (err) {
-      console.error('Danışman verileri yüklenirken hata:', err);
-      setError(`Danışman bilgileri yüklenirken bir hata oluştu: ${formatApiError(err)}`);
+      setError('Danışman bilgileri yüklenirken bir hata oluştu: ' + err.message);
     } finally {
       setInitialLoading(false);
     }
@@ -85,7 +85,7 @@ const ConsultantEdit = () => {
     
     try {
       setLoading(true);
-      await consultantService.updateConsultant(id, formData);
+      await updateConsultant(id, formData);
       navigate('/danisman');
     } catch (err) {
       setError(formatApiError(err));

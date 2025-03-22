@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import ServicePage from '../../components/ServicePage';
 import { createService } from '../../services/serviceApi';
 import { getClinics } from '../../services/clinicApi';
@@ -40,15 +40,19 @@ const ServiceCreate = () => {
         getConsultants()
       ]);
 
-      const klinikOptions = clinicsData.map(clinic => ({
+      if (!clinicsData || !consultantsData) {
+        throw new Error('Klinik veya danışman verileri alınamadı');
+      }
+
+      const klinikOptions = clinicsData.data ? clinicsData.data.map(clinic => ({
         value: clinic._id,
         label: clinic.ad
-      }));
+      })) : [];
 
-      const danismanOptions = consultantsData.map(consultant => ({
+      const danismanOptions = consultantsData.data ? consultantsData.data.map(consultant => ({
         value: consultant._id,
         label: `${consultant.ad} ${consultant.soyad}`
-      }));
+      })) : [];
 
       setService(prev => ({
         ...prev,

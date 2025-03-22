@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
 import styled from 'styled-components';
 import { clinicService } from '../../services/api';
+import { clinicService as clinicApiService, deleteClinic } from '../../services/clinicApi';
+import { formatApiError } from '../../services/utils';
 import { 
   ClinicIcon, 
   PlusIcon, 
@@ -250,7 +252,9 @@ const ClearAllButton = styled.button`
 // Ana bileşen
 const ClinicList = () => {
   const [clinics, setClinics] = useState([]);
+  const [filteredClinics, setFilteredClinics] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -272,25 +276,29 @@ const ClinicList = () => {
   const fetchClinics = async () => {
     try {
       setLoading(true);
-      const response = await clinicService.getClinics();
-      setClinics(response.data);
-      setError(null);
+      const response = await clinicService.getAll();
+      setClinics(response.data || []);
+      setFilteredClinics(response.data || []);
     } catch (err) {
       setError('Klinikler yüklenirken bir hata oluştu: ' + err.message);
-      console.error('Klinikler yüklenemedi:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  // loadClinics fonksiyonunu fetchClinics olarak yeniden adlandırıyorum
+  const loadClinics = fetchClinics;
+
   const handleDelete = async (id) => {
-    if (window.confirm('Bu kliniği silmek istediğinizden emin misiniz?')) {
+    if (window.confirm('Bu kliniği silmek istediğinize emin misiniz?')) {
       try {
-        await clinicService.deleteClinic(id);
-        setClinics(clinics.filter(clinic => clinic._id !== id));
+        setDeleting(true);
+        await deleteClinic(id);
+        loadClinics();
       } catch (err) {
         setError('Klinik silinirken bir hata oluştu: ' + err.message);
-        console.error('Klinik silinemedi:', err);
+      } finally {
+        setDeleting(false);
       }
     }
   };

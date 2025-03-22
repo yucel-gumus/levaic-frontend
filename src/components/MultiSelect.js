@@ -25,10 +25,23 @@ export const MultiSelect = ({
     };
   }, [isOpen]);
   
+  // Ensure selectedValues is always an array of primitive values (strings)
+  const normalizeValue = (val) => {
+    if (typeof val === 'object' && val !== null) {
+      return val._id || String(val);
+    }
+    return val;
+  };
+  
+  const normalizedSelectedValues = Array.isArray(selectedValues) 
+    ? selectedValues.map(normalizeValue) 
+    : [];
+  
   const toggleOption = (value) => {
-    const newValues = selectedValues.includes(value)
-      ? selectedValues.filter(v => v !== value)
-      : [...selectedValues, value];
+    const newValues = normalizedSelectedValues.includes(value)
+      ? normalizedSelectedValues.filter(v => v !== value)
+      : [...normalizedSelectedValues, value];
+    
     onChange(newValues);
   };
   
@@ -36,22 +49,30 @@ export const MultiSelect = ({
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
+  // Convert selected IDs to labels for display
+  const getSelectedLabels = () => {
+    return normalizedSelectedValues.map(id => {
+      const option = options.find(o => o.value === id);
+      return option ? option.label : id; // Fall back to ID if label not found
+    });
+  };
+  
   return (
     <div className="custom-multiselect">
       <div 
-        className={`multiselect-header ${selectedValues.length === 0 ? 'empty' : ''}`}
+        className={`multiselect-header ${normalizedSelectedValues.length === 0 ? 'empty' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {selectedValues.length > 0 ? (
+        {normalizedSelectedValues.length > 0 ? (
           <div className="selected-options">
-            {selectedValues.map(value => (
-              <span key={value} className="selected-tag">
-                {options.find(o => o.value === value)?.label}
+            {getSelectedLabels().map((label, index) => (
+              <span key={index} className="selected-tag">
+                {label}
                 <button 
                   type="button" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleOption(value);
+                    toggleOption(normalizedSelectedValues[index]);
                   }}
                 >
                   &times;
@@ -83,7 +104,7 @@ export const MultiSelect = ({
             {filteredOptions.map(option => (
               <div 
                 key={option.value} 
-                className={`option ${selectedValues.includes(option.value) ? 'selected' : ''}`}
+                className={`option ${normalizedSelectedValues.includes(option.value) ? 'selected' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleOption(option.value);
@@ -91,7 +112,7 @@ export const MultiSelect = ({
               >
                 <input
                   type="checkbox"
-                  checked={selectedValues.includes(option.value)}
+                  checked={normalizedSelectedValues.includes(option.value)}
                   onChange={() => {}}
                   onClick={(e) => e.stopPropagation()}
                 />
